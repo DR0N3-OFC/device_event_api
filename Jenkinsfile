@@ -46,7 +46,7 @@ pipeline {
     stage('Create Docker Network if not exists') {
         steps {
             script {
-                def networkExists = sh(script: "docker network ls -f name=device-network --format '{{.Name}}'", returnStatus: true)
+                def networkExists = sh(script: "docker network ls -f name=device-network --format '{{.Name}}' | grep -w ${dockerNetwork}", returnStatus: true)
                 
                 if (networkExists != 0) {
                     echo "Creating Docker network 'device-network'..."
