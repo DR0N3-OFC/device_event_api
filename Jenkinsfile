@@ -38,10 +38,24 @@ pipeline {
         sh '''
           cat <<EOF > deviceapi/.env
           JWT_SECRET=asdfasdf4234y235yh4h5erther
-          MONGO_URL=mongodb://root:mongo@localhost:27017/device_api?authSource=admin
+          MONGO_URL=mongodb://root:mongo@mongo:27017/device_api?authSource=admin
           EOF
         '''
       }
+    }
+    stage('Create Docker Network if not exists') {
+        steps {
+            script {
+                def networkExists = sh(script: "docker network ls -f name=device-network --format '{{.Name}}'", returnStatus: true)
+                
+                if (networkExists != 0) {
+                    echo "Creating Docker network 'device-network'..."
+                    sh "docker network create device-network"
+                } else {
+                    echo "Docker network 'device-network' already exists."
+                }
+            }
+        }
     }
     stage('Start MongoDB container if not exists') {
       steps {
@@ -55,6 +69,7 @@ pipeline {
                 -e MONGO_INITDB_ROOT_USERNAME=root \
                 -e MONGO_INITDB_ROOT_PASSWORD=mongo \
                 -p 27017:27017 \
+                --network=device-network \
                 -v mongo-volume:/data/db \
                 mongo:latest
             else
@@ -74,6 +89,7 @@ pipeline {
           docker run -d \
           -p 3000:3000 \
           --name express \
+          --network=device-network \
           express:latest
           
           docker ps
