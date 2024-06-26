@@ -33,6 +33,16 @@ pipeline {
           """
       }
     }
+    stage('Create .env file') {
+      steps {
+        sh '''
+          cat <<EOF > deviceapi/.env
+          JWT_SECRET=asdfasdf4234y235yh4h5erther
+          MONGO_URL=mongodb://root:mongo@localhost:27017/device_api?authSource=admin
+          EOF
+        '''
+      }
+    }
     stage('Start MongoDB container if not exists') {
       steps {
         script {          
