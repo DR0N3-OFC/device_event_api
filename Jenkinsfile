@@ -12,9 +12,6 @@ pipeline {
     }
     stage('Prune Docker data') {
       steps {
-        def containerName = 'express'
-          def imageName = 'express:latest'
-
           // Check if the container exists
           sh """
           if [ \$(docker ps -a -q -f name=express) ]; then
