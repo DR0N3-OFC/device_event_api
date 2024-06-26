@@ -17,46 +17,42 @@ pipeline {
 
           // Check if the container exists
           sh """
-          if [ \$(docker ps -a -q -f name=${containerName}) ]; then
-              echo "Removing container '${containerName}'..."
-              docker rm -f ${containerName}
+          if [ \$(docker ps -a -q -f name=express) ]; then
+              echo "Removing container 'express'..."
+              docker rm -f 'express'
           else
-              echo "Container '${containerName}' does not exist."
+              echo "Container 'express' does not exist."
           fi
           """
   
           // Check if the image exists
           sh """
-          if [ \$(docker images -q ${imageName}) ]; then
-              echo "Removing image '${imageName}'..."
-              docker rmi -f ${imageName}
+          if [ \$(docker images -q express:latest) ]; then
+              echo "Removing image 'express:latest'..."
+              docker rmi -f express:latest
           else
-              echo "Image '${imageName}' does not exist."
+              echo "Image 'express:latest' does not exist."
           fi
           """
       }
     }
     stage('Start MongoDB container if not exists') {
       steps {
-        script {
-          def mongoContainerName = 'mongo'
-          def mongoImageName = 'mongo:latest'
-          def mongoVolume = 'mongo-volume'
-          
+        script {          
           // Check if the MongoDB container exists
           sh """
-          if [ ! \$(docker ps -a -q -f name=${mongoContainerName}) ]; then
-              echo "Starting new MongoDB container '${mongoContainerName}'..."
-              docker run -d \
-              --name ${mongoContainerName} \
-              -e MONGO_INITDB_ROOT_USERNAME=root \
-              -e MONGO_INITDB_ROOT_PASSWORD=mongo \
-              -p 27017:27017 \
-              -v -v ${mongoVolumeName}:/data/db \
-              ${mongoImageName}
-          else
-              echo "MongoDB container '${mongoContainerName}' already exists."
-          fi
+            if [ ! \$(docker ps -a -q -f name=mongo) ]; then
+                echo "Starting new MongoDB container 'mongo'..."
+                docker run -d \
+                --name mongo \
+                -e MONGO_INITDB_ROOT_USERNAME=root \
+                -e MONGO_INITDB_ROOT_PASSWORD=mongo \
+                -p 27017:27017 \
+                -v mongo-volume:/data/db \
+                mongo:latest
+            else
+                echo "MongoDB container 'mongo' already exists."
+            fi
           """
         }
       }
