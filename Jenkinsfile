@@ -5,6 +5,7 @@ pipeline {
       steps {
         sh '''
           docker version
+          docker-compose version
           docker info
           curl --version
         '''
@@ -33,52 +34,6 @@ pipeline {
           """
       }
     }
-    stage('Create .env file') {
-      steps {
-        sh '''
-          cat <<EOF > deviceapi/.env
-          JWT_SECRET=asdfasdf4234y235yh4h5erther
-          MONGO_URL=mongodb://root:mongo@mongo:27017/device_api?authSource=admin
-          EOF
-        '''
-      }
-    }
-    stage('Create Docker Network if not exists') {
-        steps {
-            script {
-                def networkExists = sh(script: "docker network ls -f name=device-network --format '{{.Name}}' | grep -w ${dockerNetwork}", returnStatus: true)
-                
-                if (networkExists != 0) {
-                    echo "Creating Docker network 'device-network'..."
-                    sh "docker network create device-network"
-                } else {
-                    echo "Docker network 'device-network' already exists."
-                }
-            }
-        }
-    }
-    stage('Start MongoDB container if not exists') {
-      steps {
-        script {          
-          // Check if the MongoDB container exists
-          sh """
-            if [ ! \$(docker ps -a -q -f name=mongo) ]; then
-                echo "Starting new MongoDB container 'mongo'..."
-                docker run -d \
-                --name mongo \
-                -e MONGO_INITDB_ROOT_USERNAME=root \
-                -e MONGO_INITDB_ROOT_PASSWORD=mongo \
-                -p 27017:27017 \
-                --network=device-network \
-                -v mongo-volume:/data/db \
-                mongo:latest
-            else
-                echo "MongoDB container 'mongo' already exists."
-            fi
-          """
-        }
-      }
-    }
     stage('Start container') {
       steps {
         sh '''
@@ -89,7 +44,7 @@ pipeline {
           docker run -d \
           -p 3000:3000 \
           --name express \
-          --network=device-network \
+          -e MONGODB_URI=mongodb://mongo:27017/device_api \
           express:latest
           
           docker ps

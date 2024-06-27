@@ -1,13 +1,13 @@
 FROM node:18-alpine AS base
 
-EXPOSE 3001
+EXPOSE 3000
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 
 RUN rm -rf node_modules && npm install
 
 COPY . .
 
-CMD ["node", "./app.js"]
+CMD ["npm", "start"]
